@@ -150,12 +150,22 @@
     {
       "date": "2026-04-07",
       "type": "expense",
-      "category": "기타지출",
+      "category": "쇼핑",
       "amount": 100000,
       "memo": "",
       "createdAt": "2026-04-07T07:18:14.169Z",
-      "updatedAt": "2026-04-07T07:18:14.169Z",
+      "updatedAt": "2026-04-07T08:19:03.257Z",
       "id": "F-q2zyX982o"
+    },
+    {
+      "date": "2026-04-07",
+      "type": "expense",
+      "category": "식비",
+      "amount": 100000,
+      "memo": "",
+      "createdAt": "2026-04-07T08:18:54.929Z",
+      "updatedAt": "2026-04-07T08:18:54.929Z",
+      "id": "5DZ9KJDftzI"
     }
   ],
   "budgets": [
