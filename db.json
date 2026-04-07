@@ -1,0 +1,185 @@
+{
+  "categories": [
+    {
+      "id": "income-salary",
+      "name": "월급",
+      "type": "income"
+    },
+    {
+      "id": "income-allowance",
+      "name": "용돈",
+      "type": "income"
+    },
+    {
+      "id": "income-interest",
+      "name": "이자",
+      "type": "income"
+    },
+    {
+      "id": "income-side",
+      "name": "부수입",
+      "type": "income"
+    },
+    {
+      "id": "income-etc",
+      "name": "기타수입",
+      "type": "income"
+    },
+    {
+      "id": "expense-food",
+      "name": "식비",
+      "type": "expense"
+    },
+    {
+      "id": "expense-transport",
+      "name": "교통비",
+      "type": "expense"
+    },
+    {
+      "id": "expense-shopping",
+      "name": "쇼핑",
+      "type": "expense"
+    },
+    {
+      "id": "expense-culture",
+      "name": "문화생활",
+      "type": "expense"
+    },
+    {
+      "id": "expense-utility",
+      "name": "공과금",
+      "type": "expense"
+    },
+    {
+      "id": "expense-medical",
+      "name": "의료",
+      "type": "expense"
+    },
+    {
+      "id": "expense-education",
+      "name": "교육",
+      "type": "expense"
+    },
+    {
+      "id": "expense-etc",
+      "name": "기타지출",
+      "type": "expense"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "1",
+      "date": "2026-04-07",
+      "type": "income",
+      "category": "월급",
+      "amount": 3000000,
+      "memo": "4월 월급",
+      "createdAt": "2026-04-07T09:00:00.000Z",
+      "updatedAt": "2026-04-07T09:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "date": "2026-04-06",
+      "type": "expense",
+      "category": "식비",
+      "amount": 15000,
+      "memo": "점심 식사",
+      "createdAt": "2026-04-06T09:00:00.000Z",
+      "updatedAt": "2026-04-06T09:00:00.000Z"
+    },
+    {
+      "id": "3",
+      "date": "2026-04-05",
+      "type": "expense",
+      "category": "교통비",
+      "amount": 5000,
+      "memo": "지하철",
+      "createdAt": "2026-04-05T09:00:00.000Z",
+      "updatedAt": "2026-04-05T09:00:00.000Z"
+    },
+    {
+      "id": "4",
+      "date": "2026-04-04",
+      "type": "expense",
+      "category": "쇼핑",
+      "amount": 80000,
+      "memo": "옷 구매",
+      "createdAt": "2026-04-04T09:00:00.000Z",
+      "updatedAt": "2026-04-04T09:00:00.000Z"
+    },
+    {
+      "id": "5",
+      "date": "2026-04-03",
+      "type": "income",
+      "category": "용돈",
+      "amount": 50000,
+      "memo": "부모님 용돈",
+      "createdAt": "2026-04-03T09:00:00.000Z",
+      "updatedAt": "2026-04-03T09:00:00.000Z"
+    },
+    {
+      "id": "6",
+      "date": "2026-03-28",
+      "type": "expense",
+      "category": "문화생활",
+      "amount": 45000,
+      "memo": "친구들과 영화",
+      "createdAt": "2026-03-28T09:00:00.000Z",
+      "updatedAt": "2026-03-28T09:00:00.000Z"
+    },
+    {
+      "id": "7",
+      "date": "2026-03-25",
+      "type": "expense",
+      "category": "공과금",
+      "amount": 120000,
+      "memo": "전기/수도/가스",
+      "createdAt": "2026-03-25T09:00:00.000Z",
+      "updatedAt": "2026-03-25T09:00:00.000Z"
+    },
+    {
+      "id": "8",
+      "date": "2026-03-15",
+      "type": "income",
+      "category": "월급",
+      "amount": 3000000,
+      "memo": "3월 월급",
+      "createdAt": "2026-03-15T09:00:00.000Z",
+      "updatedAt": "2026-03-15T09:00:00.000Z"
+    },
+    {
+      "date": "2026-04-07",
+      "type": "expense",
+      "category": "기타지출",
+      "amount": 100000,
+      "memo": "",
+      "createdAt": "2026-04-07T07:18:14.169Z",
+      "updatedAt": "2026-04-07T07:18:14.169Z",
+      "id": "F-q2zyX982o"
+    }
+  ],
+  "budgets": [
+    {
+      "id": "2026-04",
+      "month": "2026-04",
+      "amount": 0,
+      "categoryBudgets": {},
+      "createdAt": "2026-04-01T00:00:00.000Z",
+      "updatedAt": "2026-04-07T07:29:24.206Z"
+    },
+    {
+      "id": "2026-03",
+      "month": "2026-03",
+      "amount": 690000,
+      "categoryBudgets": {
+        "식비": 280000,
+        "교통비": 110000,
+        "문화생활": 120000,
+        "공과금": 180000
+      },
+      "createdAt": "2026-03-01T00:00:00.000Z",
+      "updatedAt": "2026-03-01T00:00:00.000Z"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
