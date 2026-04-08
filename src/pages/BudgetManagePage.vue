@@ -1,11 +1,17 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import SummaryCard from '@/components/SummaryCard.vue'
-import { useTransactionsStore } from '@/stores/transactions'
+import { useBudgetStore } from '@/stores/budgetStore'
+import { useCategoryStore } from '@/stores/categoryStore'
+import { useTransactionStore } from '@/stores/transactionStore'
 import { formatMoney, getMonthKey } from '@/utils/format'
+import { getBudgetRate, getBudgetStatus } from '@/utils/budget'
 import { summarizeTransactions } from '@/utils/summary'
+import { parsePositiveNumber } from '@/utils/validators'
 
-const store = useTransactionsStore()
+const transactionStore = useTransactionStore()
+const categoryStore = useCategoryStore()
+const budgetStore = useBudgetStore()
 const selectedMonth = ref(getMonthKey())
 const message = ref('')
 const addForm = reactive({ category: '', amount: '' })
@@ -13,7 +19,11 @@ const editingCategory = ref('')
 const editAmount = ref('')
 
 onMounted(async () => {
-  await store.fetchAll().catch(() => {})
+  await Promise.all([
+    transactionStore.fetchTransactions(),
+    categoryStore.fetchCategories(),
+    budgetStore.fetchBudgets(),
+  ]).catch(() => {})
   resetAddForm()
 })
 
@@ -25,11 +35,11 @@ watch(selectedMonth, () => {
 })
 
 const monthTransactions = computed(() =>
-  store.sortedTransactions.filter((transaction) => transaction.date.startsWith(selectedMonth.value)),
+  transactionStore.sortedTransactions.filter((transaction) => transaction.date.startsWith(selectedMonth.value)),
 )
 
 const monthSummary = computed(() => summarizeTransactions(monthTransactions.value))
-const currentBudget = computed(() => store.getBudgetByMonth(selectedMonth.value))
+const currentBudget = computed(() => budgetStore.getBudgetByMonth(selectedMonth.value))
 const categoryBudgetMap = computed(() => currentBudget.value?.categoryBudgets || {})
 const totalBudget = computed(() =>
   Object.values(categoryBudgetMap.value).reduce((sum, amount) => sum + Number(amount || 0), 0),
@@ -49,7 +59,7 @@ const configuredRows = computed(() =>
         spent,
         budget,
         remaining: Math.max(0, budget - spent),
-        rate: budget > 0 ? (spent / budget) * 100 : 0,
+        rate: getBudgetRate(spent, budget),
         status: getBudgetStatus(spent, budget),
       }
     })
@@ -57,24 +67,8 @@ const configuredRows = computed(() =>
 )
 
 const availableCategories = computed(() =>
-  store.expenseCategories.filter((category) => !categoryBudgetMap.value[category.name]),
+  categoryStore.expenseCategories.filter((category) => !categoryBudgetMap.value[category.name]),
 )
-
-function getBudgetStatus(spent, budget) {
-  if (!budget) return { tone: 'neutral', label: '미설정', text: '예산을 설정해 주세요.' }
-  if (spent > budget) return { tone: 'danger', label: '초과', text: '예산을 초과했습니다.' }
-  const rate = (spent / budget) * 100
-  if (rate >= 90) return { tone: 'danger', label: '경고', text: '예산의 90% 이상을 사용했습니다.' }
-  if (rate >= 80) return { tone: 'warning', label: '주의', text: '예산의 80% 이상을 사용했습니다.' }
-  return { tone: 'good', label: '정상', text: '예산 범위 안에서 관리 중입니다.' }
-}
-
-function parseMoney(value) {
-  if (value === '' || value === null || value === undefined) return null
-  const amount = Number(value)
-  if (!Number.isFinite(amount) || amount <= 0) return null
-  return amount
-}
 
 function resetAddForm() {
   addForm.category = availableCategories.value[0]?.name || ''
@@ -83,7 +77,7 @@ function resetAddForm() {
 
 async function persistCategoryBudgets(categoryBudgets, successMessage) {
   try {
-    await store.saveBudget(selectedMonth.value, { categoryBudgets })
+    await budgetStore.saveBudget(selectedMonth.value, { categoryBudgets })
     message.value = successMessage
     resetAddForm()
   } catch (error) {
@@ -93,7 +87,7 @@ async function persistCategoryBudgets(categoryBudgets, successMessage) {
 
 async function addBudget() {
   message.value = ''
-  const amount = parseMoney(addForm.amount)
+  const amount = parsePositiveNumber(addForm.amount)
 
   if (!addForm.category) {
     message.value = '예산을 설정할 카테고리를 선택해 주세요.'
@@ -125,7 +119,7 @@ function cancelEdit() {
 }
 
 async function saveEdit(categoryName) {
-  const amount = parseMoney(editAmount.value)
+  const amount = parsePositiveNumber(editAmount.value)
   if (amount === null) {
     message.value = '수정할 예산은 0보다 큰 숫자로 입력해 주세요.'
     return

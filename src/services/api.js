@@ -1,3 +1,4 @@
+// 사용하지 않는 파일: 참고용으로 남겨둔 이전 통합 API service입니다.
 import axios from 'axios'
 
 const client = axios.create({

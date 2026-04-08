@@ -22,14 +22,23 @@ skeletonvue/
 │  ├─ router/
 │  │  └─ index.js
 │  ├─ services/
-│  │  └─ api.js
+│  │  ├─ api.js                 # 사용하지 않는 파일, 이전 통합 API 참고용
+│  │  ├─ apiClient.js
+│  │  ├─ budgetService.js
+│  │  ├─ categoryService.js
+│  │  └─ transactionService.js
 │  ├─ stores/
-│  │  └─ transactions.js
+│  │  ├─ budgetStore.js
+│  │  ├─ categoryStore.js
+│  │  ├─ transactionStore.js
+│  │  └─ transactions.js        # 사용하지 않는 파일, 이전 통합 store 참고용
 │  ├─ styles/
 │  │  └─ main.css
 │  ├─ utils/
+│  │  ├─ budget.js
 │  │  ├─ format.js
-│  │  └─ summary.js
+│  │  ├─ summary.js
+│  │  └─ validators.js
 │  ├─ App.vue
 │  └─ main.js
 ├─ API_SPEC.md

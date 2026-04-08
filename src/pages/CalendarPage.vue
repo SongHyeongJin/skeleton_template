@@ -1,32 +1,32 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import TransactionListItem from '@/components/TransactionListItem.vue'
-import { useTransactionsStore } from '@/stores/transactions'
+import { useTransactionStore } from '@/stores/transactionStore'
 import { addMonths, buildMonthDays, formatFullDate, formatMonth, toDateInputValue } from '@/utils/format'
 import { summarizeTransactions } from '@/utils/summary'
 
-const store = useTransactionsStore()
+const transactionStore = useTransactionStore()
 const currentDate = ref(new Date())
 const selectedDate = ref(toDateInputValue())
 
 const weekdayLabels = ['일', '월', '화', '수', '목', '금', '토']
 
 onMounted(() => {
-  store.fetchAll().catch(() => {})
+  transactionStore.fetchTransactions().catch(() => {})
 })
 
 const monthDays = computed(() => buildMonthDays(currentDate.value))
 const emptyCells = computed(() => monthDays.value[0]?.getDay() || 0)
 
 const selectedTransactions = computed(() =>
-  store.sortedTransactions.filter((transaction) => transaction.date === selectedDate.value),
+  transactionStore.sortedTransactions.filter((transaction) => transaction.date === selectedDate.value),
 )
 
 const selectedSummary = computed(() => summarizeTransactions(selectedTransactions.value))
 
 function transactionsByDay(day) {
   const dateValue = toDateInputValue(day)
-  return store.sortedTransactions.filter((transaction) => transaction.date === dateValue)
+  return transactionStore.sortedTransactions.filter((transaction) => transaction.date === dateValue)
 }
 
 function daySummary(day) {

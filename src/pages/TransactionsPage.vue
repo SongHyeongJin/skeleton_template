@@ -2,11 +2,13 @@
 import { computed, onMounted, reactive, watch } from 'vue'
 import SummaryCard from '@/components/SummaryCard.vue'
 import TransactionListItem from '@/components/TransactionListItem.vue'
-import { useTransactionsStore } from '@/stores/transactions'
+import { useCategoryStore } from '@/stores/categoryStore'
+import { useTransactionStore } from '@/stores/transactionStore'
 import { endOfMonth, endOfWeek, startOfMonth, startOfWeek, toDateInputValue } from '@/utils/format'
 import { categorySummary, summarizeTransactions } from '@/utils/summary'
 
-const store = useTransactionsStore()
+const transactionStore = useTransactionStore()
+const categoryStore = useCategoryStore()
 
 const filters = reactive({
   type: 'all',
@@ -19,7 +21,10 @@ const filters = reactive({
 })
 
 onMounted(() => {
-  store.fetchAll().catch(() => {})
+  Promise.all([
+    transactionStore.fetchTransactions(),
+    categoryStore.fetchCategories(),
+  ]).catch(() => {})
 })
 
 watch(
@@ -50,11 +55,11 @@ watch(
 )
 
 const availableCategories = computed(() =>
-  store.categories.filter((category) => filters.type === 'all' || category.type === filters.type),
+  categoryStore.categories.filter((category) => filters.type === 'all' || category.type === filters.type),
 )
 
 const filteredTransactions = computed(() => {
-  const rows = store.sortedTransactions.filter((transaction) => {
+  const rows = transactionStore.sortedTransactions.filter((transaction) => {
     if (filters.type !== 'all' && transaction.type !== filters.type) return false
     if (filters.category !== 'all' && transaction.category !== filters.category) return false
     if (filters.startDate && transaction.date < filters.startDate) return false
@@ -84,7 +89,7 @@ function resetFilters() {
 
 async function deleteTransaction(id) {
   if (!confirm('이 거래를 삭제하시겠습니까?')) return
-  await store.deleteTransaction(id)
+  await transactionStore.deleteTransaction(id)
 }
 </script>
 

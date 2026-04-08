@@ -1,3 +1,4 @@
+// 사용하지 않는 파일: 참고용으로 남겨둔 이전 통합 store입니다.
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/services/api'

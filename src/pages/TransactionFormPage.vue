@@ -1,14 +1,19 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { api } from '@/services/api'
-import { useTransactionsStore } from '@/stores/transactions'
+import { transactionService } from '@/services/transactionService'
+import { useBudgetStore } from '@/stores/budgetStore'
+import { useCategoryStore } from '@/stores/categoryStore'
+import { useTransactionStore } from '@/stores/transactionStore'
 import { getMonthKey, toDateInputValue } from '@/utils/format'
-import { summarizeTransactions } from '@/utils/summary'
+import { getBudgetNotices } from '@/utils/budget'
+import { isValidDate, parsePositiveNumber } from '@/utils/validators'
 
 const route = useRoute()
 const router = useRouter()
-const store = useTransactionsStore()
+const transactionStore = useTransactionStore()
+const categoryStore = useCategoryStore()
+const budgetStore = useBudgetStore()
 
 const saving = ref(false)
 const message = ref('')
@@ -23,16 +28,16 @@ const form = reactive({
 })
 
 const filteredCategories = computed(() =>
-  store.categories.filter((category) => category.type === form.type),
+  categoryStore.categories.filter((category) => category.type === form.type),
 )
 
 onMounted(async () => {
-  if (!store.categories.length) await store.fetchCategories()
-  if (!store.budgets.length) await store.fetchBudgets().catch(() => {})
+  if (!categoryStore.categories.length) await categoryStore.fetchCategories()
+  if (!budgetStore.budgets.length) await budgetStore.fetchBudgets().catch(() => {})
 
   if (isEdit.value) {
-    const cached = store.getTransactionById(route.params.id)
-    const transaction = cached || (await api.getTransaction(route.params.id))
+    const cached = transactionStore.getTransactionById(route.params.id)
+    const transaction = cached || (await transactionService.getTransaction(route.params.id))
     form.date = transaction.date
     form.type = transaction.type
     form.category = transaction.category
@@ -45,51 +50,25 @@ onMounted(async () => {
 
 function selectType(type) {
   form.type = type
-  form.category = store.categories.find((category) => category.type === type)?.name || ''
+  form.category = categoryStore.categories.find((category) => category.type === type)?.name || ''
 }
 
 function validateForm() {
   if (!form.type || !['income', 'expense'].includes(form.type)) return '거래 유형을 선택해 주세요.'
-  if (!form.date || Number.isNaN(new Date(form.date).getTime())) return '유효한 날짜를 입력해 주세요.'
+  if (!isValidDate(form.date)) return '유효한 날짜를 입력해 주세요.'
   if (!form.category) return '카테고리를 선택해 주세요.'
-  if (!form.amount || !Number.isFinite(Number(form.amount)) || Number(form.amount) <= 0) return '0보다 큰 금액을 입력해 주세요.'
+  if (parsePositiveNumber(form.amount) === null) return '0보다 큰 금액을 입력해 주세요.'
   return ''
 }
 
 function budgetNotice(payload) {
-  if (payload.type !== 'expense') return ''
   const month = getMonthKey(new Date(`${payload.date}T00:00:00`))
-  const budget = store.getBudgetByMonth(month)
-  if (!budget?.amount && !budget?.categoryBudgets?.[payload.category]) return ''
-
-  const monthTransactions = store.transactions.filter((transaction) => {
-    if (!transaction.date.startsWith(month) || transaction.type !== 'expense') return false
-    return !isEdit.value || String(transaction.id) !== String(route.params.id)
-  })
-  const expense = summarizeTransactions([...monthTransactions, payload]).expense
-  const notices = []
-
-  if (budget.amount) {
-    const rate = (expense / Number(budget.amount)) * 100
-
-    if (expense > Number(budget.amount)) notices.push('전체 예산을 초과했습니다.')
-    else if (rate >= 90) notices.push('전체 예산의 90% 이상을 사용했습니다.')
-    else if (rate >= 80) notices.push('전체 예산의 80% 이상을 사용했습니다.')
-  }
-
-  const categoryBudget = Number(budget.categoryBudgets?.[payload.category] || 0)
-  if (categoryBudget) {
-    const categoryExpense = [...monthTransactions, payload]
-      .filter((transaction) => transaction.category === payload.category)
-      .reduce((sum, transaction) => sum + Number(transaction.amount), 0)
-    const categoryRate = (categoryExpense / categoryBudget) * 100
-
-    if (categoryExpense > categoryBudget) notices.push(`${payload.category} 예산을 초과했습니다.`)
-    else if (categoryRate >= 90) notices.push(`${payload.category} 예산의 90% 이상을 사용했습니다.`)
-    else if (categoryRate >= 80) notices.push(`${payload.category} 예산의 80% 이상을 사용했습니다.`)
-  }
-
-  return notices.join('\n')
+  return getBudgetNotices({
+    transactions: transactionStore.transactions,
+    payload,
+    budget: budgetStore.getBudgetByMonth(month),
+    editingId: isEdit.value ? route.params.id : '',
+  }).join('\n')
 }
 
 async function submit() {
@@ -106,8 +85,8 @@ async function submit() {
   }
 
   try {
-    if (isEdit.value) await store.updateTransaction(route.params.id, payload)
-    else await store.createTransaction(payload)
+    if (isEdit.value) await transactionStore.updateTransaction(route.params.id, payload)
+    else await transactionStore.createTransaction(payload)
 
     const notice = budgetNotice(payload)
     if (notice) window.alert(notice)

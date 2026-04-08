@@ -4,43 +4,44 @@ import DonutChart from '@/components/DonutChart.vue'
 import MonthlyBarChart from '@/components/MonthlyBarChart.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
 import TransactionListItem from '@/components/TransactionListItem.vue'
-import { useTransactionsStore } from '@/stores/transactions'
+import { useBudgetStore } from '@/stores/budgetStore'
+import { useTransactionStore } from '@/stores/transactionStore'
 import { addMonths, formatMoney, getMonthKey } from '@/utils/format'
+import { getBudgetRate, getBudgetStatus } from '@/utils/budget'
 import { categorySummary, summarizeTransactions } from '@/utils/summary'
 
-const store = useTransactionsStore()
+const transactionStore = useTransactionStore()
+const budgetStore = useBudgetStore()
 const selectedMonth = ref(getMonthKey())
 
 onMounted(() => {
-  store.fetchAll().catch(() => {})
+  Promise.all([
+    transactionStore.fetchTransactions(),
+    budgetStore.fetchBudgets(),
+  ]).catch(() => {})
 })
 
 const monthTransactions = computed(() =>
-  store.sortedTransactions.filter((transaction) => transaction.date.startsWith(selectedMonth.value)),
+  transactionStore.sortedTransactions.filter((transaction) => transaction.date.startsWith(selectedMonth.value)),
 )
 
 const summary = computed(() => summarizeTransactions(monthTransactions.value))
-const recentTransactions = computed(() => store.sortedTransactions.slice(0, 5))
+const recentTransactions = computed(() => transactionStore.sortedTransactions.slice(0, 5))
 const expenseRows = computed(() => categorySummary(monthTransactions.value, 'expense'))
-const currentBudget = computed(() => store.getBudgetByMonth(selectedMonth.value))
+const currentBudget = computed(() => budgetStore.getBudgetByMonth(selectedMonth.value))
 const budgetAmount = computed(() => Number(currentBudget.value?.amount || 0))
-const budgetRate = computed(() =>
-  budgetAmount.value > 0 ? Math.min(999, (summary.value.expense / budgetAmount.value) * 100) : 0,
-)
+const budgetRate = computed(() => Math.min(999, getBudgetRate(summary.value.expense, budgetAmount.value)))
 
 const budgetStatus = computed(() => {
   if (!budgetAmount.value) return { tone: 'neutral', label: '미설정', text: '예산 페이지에서 전체 예산을 설정해 주세요.' }
-  if (summary.value.expense > budgetAmount.value) return { tone: 'danger', label: '초과', text: '예산을 초과했습니다.' }
-  if (budgetRate.value >= 90) return { tone: 'danger', label: '경고', text: '예산의 90% 이상을 사용했습니다.' }
-  if (budgetRate.value >= 80) return { tone: 'warning', label: '주의', text: '예산의 80% 이상을 사용했습니다.' }
-  return { tone: 'good', label: '정상', text: '예산 범위 안에서 관리 중입니다.' }
+  return getBudgetStatus(summary.value.expense, budgetAmount.value)
 })
 
 const trendRows = computed(() => {
   const base = new Date(`${selectedMonth.value}-01T00:00:00`)
   return Array.from({ length: 6 }, (_, index) => addMonths(base, index - 5)).map((date) => {
     const month = getMonthKey(date)
-    const transactions = store.sortedTransactions.filter((transaction) => transaction.date.startsWith(month))
+    const transactions = transactionStore.sortedTransactions.filter((transaction) => transaction.date.startsWith(month))
     const rowSummary = summarizeTransactions(transactions)
     return {
       month,
@@ -65,8 +66,8 @@ const trendRows = computed(() => {
       </label>
     </div>
 
-    <p v-if="store.error" class="alert">{{ store.error }} 터미널에서 `npm run server`를 실행해 주세요.</p>
-    <p v-else-if="store.loading" class="loading">데이터를 불러오는 중입니다.</p>
+    <p v-if="transactionStore.error || budgetStore.error" class="alert">json-server에서 데이터를 불러오지 못했습니다. 터미널에서 `npm run server`를 실행해 주세요.</p>
+    <p v-else-if="transactionStore.loading || budgetStore.loading" class="loading">데이터를 불러오는 중입니다.</p>
 
     <div class="summary-grid">
       <SummaryCard title="총 수입" :amount="summary.income" tone="income" />
